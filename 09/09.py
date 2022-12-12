@@ -15,45 +15,40 @@ def print_grid(visited):
             else:
                 print(".", end="")
         print("")
-
-def head_tail_diagonal(a,b):
-    dx, dy = tuple([x + y for x, y in zip(a,b)])
-    if abs(dx) == 1 and abs(dy) == 1:
-        return True
-    else:
-        return False
+    print(" ")
 
 def perform_move(head, tail, direction):
-    dirs = dict(zip("ULDR","DRUL"))
+    transfer = dict(zip("ULDR", "DRUL"))
     new_head = tuple_sum(head, directions[direction])
-    new_tail = tail
-    if manh_distance(new_head, tail) == 2:
-        if head_tail_diagonal(new_head, tail):
-            new_tail = tail
-        else:
-            new_tail = tuple_sum(tail, directions[direction])
-    elif manh_distance(new_head, tail) == 3:
-        new_tail = tuple_sum(new_head, directions[dirs[direction]])
+    distance = manh_distance(new_head, tail) #distance between NEW head and OLD tail
+    dx, dy = tuple([abs(x - y) for x, y in zip(new_head,tail)]) #difference in coords of new head and old tail
+    if distance in [0,1]: #NEW head lies on OLD tail or lies UDLR - dont move
+        new_tail = tail
+    elif distance == 2 and (dx == 0 or dy == 0): #old tail laid UDLR - move same direction as head
+        new_tail = tuple_sum(tail, directions[direction])
+    elif distance == 2 and (dx == 1 and dx == 1): #old tail is diagonal from head - dont move
+        new_tail = tail
+    elif distance == 3: #NEW tail becomes position of NEW head in opposite direction
+        new_tail = tuple_sum(new_head, directions[transfer[direction]])
     return new_head, new_tail
+
+def perform_task1(instructions):
+    visited = set()
+    tail = (0, 0)
+    head = (0, 0)
+    for instruction in instructions:
+        direction, counter = instruction.split(" ")
+        for _ in range(int(counter)):
+            head, tail = perform_move(head, tail, direction)
+            visited.add(tail)
+    return len(visited)
 
 #MAIN
 with open("test.txt") as file:
     instructions = file.read().splitlines()
 
-print(instructions)
 directions = {"U":(0, 1),"D":(0, -1), "L":(-1, 0),"R":(1, 0)}  # UDLR
 
-visited = set()
-tail = (0,0)
-head = (0,0)
-
-print(perform_move((-1,0),(0,0),"R"))
-
 #Task1:
-for instruction in instructions:
-    direction, counter = instruction.split(" ")
-    for _ in range(int(counter)):
-        head,tail = perform_move(head,tail,direction)
-        visited.add(tail)
-print_grid(visited)
-print(len(visited))
+task1_result = perform_task1(instructions)
+print("Task 1:", task1_result)
