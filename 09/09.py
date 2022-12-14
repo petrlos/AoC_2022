@@ -66,6 +66,7 @@ def perform_task2(instructions):
             visited.add(rope[-1])
     return visited
 
+#TODO: task2 not working yet
 #MAIN
 with open("test_2.txt") as file:
     instructions = file.read().splitlines()
