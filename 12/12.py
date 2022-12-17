@@ -1,6 +1,8 @@
 #Advent of Code 2022: Day 12
 import string
-from collections import deque, defaultdict
+from collections import deque
+from datetime import datetime
+time_start = datetime.now()
 
 def tuple_sum(a,b):
     return tuple([x + y for x, y in zip(a,b)])
@@ -34,6 +36,8 @@ def start_to_exit(start, exit, maze):
                         distances[new_point] = distances[current_point] + 1
                         queue.append(new_point)
         queue.popleft()
+    if exit not in distances.keys(): # there might be "a" that will not reach exit
+        distances[exit] = 99999
     return distances[exit]
 
 #MAIN
@@ -46,3 +50,14 @@ start, exit, maze = parse_data(lines)
 #Task1:
 task1 = start_to_exit(start, exit, maze)
 print("Task 1:", task1)
+
+#Task2:
+starts = []
+for key, value in maze.items():
+    if value == 1:
+        starts.append(key)
+task2_distances = []
+for start in starts:
+    new_distance = start_to_exit(start, exit, maze)
+    task2_distances.append(new_distance)
+print("Task 2", min(task2_distances))
