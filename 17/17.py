@@ -42,7 +42,34 @@ def draw_column(column):
             else:
                 print(".", end="")
         print("|")
-    print(" +0123456+   CH:{0}".format(current_height))
+    print(" +0123456+")
+
+def let_n_rocks_fall(n):
+    current_height = 0
+    index = 0  # index in list of moves
+    last_height = 0
+    for rock_counter in range(n):
+        rock = rocks[rock_counter % 5]  # choose rock
+        move_up = current_height + 3 + 1
+        rock = move_rock(rock, (2, move_up))  # set rock to start position
+        falling_possible = True
+        while falling_possible:
+            move = left_right[pattern[index % len(pattern)]] # after the end is reached, start over
+            new_rock = move_rock(rock, move)
+            if move_possible(new_rock):  # is move left/right possible?
+                rock = new_rock
+            new_rock = move_rock(rock, down)
+            if move_possible(new_rock):  # is move down possible?
+                rock = new_rock
+            else:  # rock is written to column
+                falling_possible = False
+                for coord in rock:
+                    column.add(coord)
+                new_height = max([y for x, y in rock])
+                if new_height > current_height:
+                    current_height = new_height
+            index += 1
+    return current_height
 
 #MAIN
 rocks = define_rocks()
@@ -54,27 +81,5 @@ with open("data.txt") as file:
 
 #Task1
 column = set()
-current_height = 0
-index = 0 #index in list of moves
-for rock_counter in range(2022):
-    rock = rocks[rock_counter % 5] #choose rock
-    move_up = current_height + 3 + 1
-    rock = move_rock(rock, (2,move_up)) #set rock to start position
-    falling_possible = True
-    while falling_possible:
-        move = left_right[pattern[index % len(pattern)]] #after the end is reached, start over
-        new_rock = move_rock(rock, move)
-        if move_possible(new_rock): # is move left/right possible?
-            rock = new_rock
-        new_rock = move_rock(rock, down)
-        if move_possible(new_rock): #is move down possible?
-            rock = new_rock
-        else: #rock is written to column
-            falling_possible = False
-            for coord in rock:
-                column.add(coord)
-            new_height= max([y for x, y in rock])
-            if new_height > current_height:
-                current_height = new_height
-        index += 1
-print("Task 1:",current_height)
+task1 = let_n_rocks_fall(2022)
+print("Task 1:",task1)
