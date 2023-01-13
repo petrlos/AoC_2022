@@ -4,18 +4,20 @@ def tuple_sum(a,b):
     return tuple([x + y for x, y in zip(a,b)])
 
 def parse_data(lines):
-    elf = 35
+    elf = 0 #each elf has unique number
     grid = {}
     for y, line in enumerate(lines):
         for x, char in enumerate(line):
             if char == "#":
-                grid[elf] = (x,y)
+                grid[elf] = (x,y) #elf with number is to be found on coords (x,y)
                 elf += 1
     return grid
 
-def print_grid(grid):
-    x_s = [coord[0] for coord in grid.values()]
-    y_s = [coord[1] for coord in grid.values()]
+def count_grid(grid):
+    x_s = [coord[0] for coord in grid.values()] #find all X coords in grid
+    y_s = [coord[1] for coord in grid.values()] #find all Y coords in grid
+    x_size = abs(min(x_s) - max(x_s)) +1 #size horizontal
+    y_size = abs(min(y_s) - max(y_s)) +1 #size vertical
     """print(min(y_s), min(x_s))
     for y in range(min(y_s)-1, max(y_s)+2):
         for x in range(min(x_s)-3, max(x_s)+2):
@@ -25,10 +27,7 @@ def print_grid(grid):
                 print(".", end="")
         print(" ")
     """
-    x_size = abs(min(x_s) - max(x_s)) +1
-    y_size = abs(min(y_s) - max(y_s)) +1
-    print("Size:", x_size*y_size-len(grid))
-    print("Elf count:", len(grid))
+    return x_size*y_size-len(grid) #all points in rectangle of size x*y - elven-count
 
 def move_possible(directions, coord):
     for direction in directions:
@@ -55,27 +54,37 @@ with open("data.txt") as file:
     lines = file.read().splitlines()
 grid = parse_data(lines)
 
+#directions
 north = [(-1,-1), (0,-1), (1,-1)]
 west = [(-1,-1), (-1,0), (-1,1)]
 south = [(-1,1), (0,1), (1,1)]
 east = [(1,-1), (1,0), (1,1)]
 
-all_neighbours = set(north+west+south+east)
+all_neighbours = set(north+west+south+east) #neighbours
 look_directions = [north, south, west, east]
 
+counter = 0
 start_look = 0
-for counter in range(10):
-    print(counter)
+elf_moved = True
+while elf_moved:
+    elf_moved = False
     new_grid = {}
     for elf, coord in grid.items():
         if space_around_free(coord):
-            new_grid[elf] = coord
+            new_grid[elf] = coord #everything around three? dont move
         else:
-            new_grid[elf] = coord
-            for i in range(4):
+            elf_moved = True #found elf that moved? run again
+            new_grid[elf] = coord #for case no move is possible
+            for i in range(4): #is move in any direction possible? move
                 if move_possible(look_directions[(i + start_look) %4], coord):
                     new_grid[elf] = tuple_sum(coord, look_directions[(i + start_look) %4][1])
                     break
-    grid = clean_up(new_grid, grid)
+    grid = clean_up(new_grid, grid) #find all elves, that moved to same coords and move them back
     start_look += 1
-print_grid(grid)
+    counter += 1
+    if counter == 10:
+        print("Size after {0} rounds: {1}".format(counter, count_grid(grid)))
+    if counter % 10 == 0:
+        print("Rounds checked:",counter)
+#runtime for part2 was about 30minutes
+print("Round counter, after no elves moved:",counter)
