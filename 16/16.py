@@ -1,6 +1,7 @@
 #Advent of Code 2022 - Day 16
 import re
 from collections import deque
+from itertools import permutations
 from pprint import pprint as pp
 
 def test(): #created on paper for test purpose
@@ -26,7 +27,7 @@ def get_distances_to_valves_with_flow(lines):
         for key in list(distances.keys()):
             if key not in valves: #remove all valves without flow
                 distances.pop(key)
-        distances.pop(start)
+        distances.pop(start, None)
         return distances
 
     valves, valves_flow, valves_dist, all_valves = {}, {}, {}, {}
@@ -40,11 +41,36 @@ def get_distances_to_valves_with_flow(lines):
     for valve in valves.keys():
         valves_dist[valve] = bfs_simplify_graph(valve)
         valves_flow[valve] = all_valves[valve][0]
-    return valves_dist, valves_flow
+    start = bfs_simplify_graph("AA")
+    return start,valves_dist,valves_flow
+
+def brute_force_sollution(): #dont use for real data
+    def count_pressure(way):
+        current = "AA"
+        output = 0
+        time = 30
+        while way:
+            distance = valves_dist[current]
+            distance = distance[way[0]]
+            time -= distance + 1  # traveldistance + time to open
+            current, way = way[0], way[1:]
+            output += time * valves_flow[current]
+        return output
+
+    all_possible_ways = (permutations(valves_dist.keys()))
+    valves_dist["AA"] = starter
+
+    outputs = []
+    for way in all_possible_ways:
+        output = count_pressure(list(way))
+        outputs.append(output)
+    return max(outputs)
+
+#MAIN
 
 with open("test.txt") as file:
     lines = file.read().splitlines()
 
-valves_dist, valves_flow = get_distances_to_valves_with_flow(lines)
+starter, valves_dist, valves_flow = get_distances_to_valves_with_flow(lines)
 
-pp(valves_flow)
+print(brute_force_sollution())
