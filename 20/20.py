@@ -7,8 +7,10 @@ class Node:
     def __str__(self):
         return self.value
 
-def print_numbers():
+def print_numbers(a,b,c,start=False):
     num = numbers[0]
+    if not start:
+        print("{0} moves between {1} and {2}".format(a,b,c))
     for i in range(len(numbers)):
         print(num.value, " ", end="")
         num = num.right
@@ -28,23 +30,33 @@ for i in range(len(numbers)):
     numbers[i].right = numbers[(i+1) % len(numbers)]
 
 print("Initial arrangement")
-print_numbers()
+print_numbers(0,0,0,start=False)
 
 for num in numbers:
     if num.value == 0:
-        zero = num #ulozi pozici nuly
+        zero = num #save position=index in list of zero
     target = num
-    if num.value > 0:
-        steps = num.value
+    if num.value > 0: #move right
         for _ in range(num.value):
              target = target.right
-        #vymaz cislo z pozice
+        #delete number from current position
         num.right.left = num.left #vlevo od nasledujiciho bude predchozi
         num.left.right = num.right #vpravo od predchoziho bude nasledujici
-        #vloz na novou pozici
-        print("{0} moves between {1} and {2}".format(num.value, target.value, target.right.value))
+        #insert on new position
         target.right.left = num #nasledujici od targetu bude vlozene cislo
         num.right = target.right #od vlozeneho cisla vpravo bude nasledujici cislo
         target.right = num #vpravo od targetu bude vlozene cislo
         num.left = target #vlevo od cisla bude target
-        print_numbers()
+        print_numbers(num.value, target.value, target.right.value)
+    elif num.value < 0: #move left
+        for _ in range(-num.value):
+             target = target.left
+        #delete number from current position
+        num.right.left = num.left
+        num.left.right = num.right
+        #insert on new position
+        target.left.right = num
+        num.right = target
+        target.left = num
+        num.left = target.left
+        print_numbers(num.value, target.value, target.right.value)
