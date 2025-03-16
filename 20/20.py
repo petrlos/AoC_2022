@@ -1,62 +1,52 @@
 #Advent of Code 2022: Day 20
 class Node:
-    def __init__(self, number):
-        self.value = number
+    def __init__(self, value):
+        self.value = value
         self.left = None
         self.right = None
-    def __str__(self):
-        return self.value
 
-def print_numbers(a,b,c,start=False):
-    num = numbers[0]
-    if not start:
-        print("{0} moves between {1} and {2}".format(a,b,c))
-    for i in range(len(numbers)):
-        print(num.value, " ", end="")
-        num = num.right
-    print("\n")
+def schuffle_linked_list(multiplicator=1, rounds=1):
+    #create a list of nodes
+    linked_list = [Node(number*multiplicator) for number in numbers]
+    #connect them to left and right
+    for i in range(len(linked_list)):
+        linked_list[i].left = linked_list[i - 1]
+        linked_list[i].right = linked_list[(i + 1) % len(linked_list)]
+    #modulo for large numbers - have to go only once around
+    modulo = len(linked_list) - 1
+    for i in range(rounds):
+        for num in linked_list:
+            if num.value == 0: #save the position of ZERO for counting final result
+                final_target = num
+                continue
+            target = num
+            if num.value > 0: #positive number - step right num.value-times to find target
+                for _ in range(num.value % modulo):
+                    target = target.right
+            if num.value < 0: #negative number - step left num.value-times +1 to find target - insert always on right
+                for _ in range((-num.value + 1) % modulo):
+                    target = target.left
+            # de-link current number
+            num.right.left = num.left
+            num.left.right = num.right
+            # make a new connection
+            target.right.left = num
+            num.right = target.right
+            target.right = num
+            num.left = target
+    result = []
+    for i in range(3):
+        for j in range(1000): #find position 1000th, 2000th and 3000th
+            final_target = final_target.right
+        result.append(final_target.value)
+    return result
 
 #MAIN
-with open("test.txt") as file:
-    lines = file.read().splitlines()
+with open("data.txt") as file:
+    numbers = list(map(int,file.read().splitlines()))
 
-#vytvori list instanci tridy Node bez definovaneho odkazu na leveho a praveho clena
-numbers = [Node(int(number)) for number in lines]
+part1 = schuffle_linked_list()
+print(f"Part 1: {part1}, sum = {sum(part1)}")
 
-for i in range(len(numbers)):
-    #circular linked list - modulo % zajisti "nepreteceni" listu a napojeni do kruhu
-    #tzn. i=0 vrati len(numbers) = posledni clen, index posledniho clena + 1 vrati 0 = prvni clen
-    numbers[i].left = numbers[(i-1) % len(numbers)]
-    numbers[i].right = numbers[(i+1) % len(numbers)]
-
-print("Initial arrangement")
-print_numbers(0,0,0,start=False)
-
-for num in numbers:
-    if num.value == 0:
-        zero = num #save position=index in list of zero
-    target = num
-    if num.value > 0: #move right
-        for _ in range(num.value):
-             target = target.right
-        #delete number from current position
-        num.right.left = num.left #vlevo od nasledujiciho bude predchozi
-        num.left.right = num.right #vpravo od predchoziho bude nasledujici
-        #insert on new position
-        target.right.left = num #nasledujici od targetu bude vlozene cislo
-        num.right = target.right #od vlozeneho cisla vpravo bude nasledujici cislo
-        target.right = num #vpravo od targetu bude vlozene cislo
-        num.left = target #vlevo od cisla bude target
-        print_numbers(num.value, target.value, target.right.value)
-    elif num.value < 0: #move left
-        for _ in range(-num.value):
-             target = target.left
-        #delete number from current position
-        num.right.left = num.left
-        num.left.right = num.right
-        #insert on new position
-        target.left.right = num
-        num.right = target
-        target.left = num
-        num.left = target.left
-        print_numbers(num.value, target.value, target.right.value)
+part2 = schuffle_linked_list(811589153, 10)
+print(f"Part 2: {part2}, sum = {sum(part2)}")
