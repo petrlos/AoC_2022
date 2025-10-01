@@ -17,64 +17,47 @@ def simplify_graph(valve, valves):
             if neighbour in visited and visited[neighbour] <= dist: continue
             visited[neighbour] = dist
             queue.append(neighbour)
-    return visited
+    return {val: dist for val, dist in visited.items() if valves_flow[val] != 0 and val != valve}
 
-def find_path(pos, time_left, opened, memo):
-    key = (pos, time_left, opened)
-    if key in memo: return memo[key] #status already found
+def find_path(pos, time_left, opened):
+    if (pos, time_left, opened) in cache:
+        return cache[(pos, time_left, opened)] #status already found
 
-    _, neighbours = map[pos]
-
-    if time_left <= 2: return 0 #time runs out
+    if time_left <= 2: return 0 #time runs out - at time = 2 no need to move - cant open anything else
     best = 0
 
-    """unopened = [map[val][0] for val, index in valves_indexes.items() if not (1 << index & opened)]
-
-    minutes = time_left
-    theoretical_gain = 0
-    for val in sorted(unopened, reverse=True):
-        minutes -= 2
-        if minutes <= 0:
-            break
-        theoretical_gain += val * minutes
-    if (theoretical_gain  <= global_best["value"]): return 0"""
-
-    for next, distance in neighbours.items():
-        flow, _ = map[next]
-        if next == pos: continue
-        if (1 << valves_indexes[next]) & opened: continue #laready opened
-
+    for next, distance in valves_distances[pos].items():
+        if (1 << valves_indexes[next]) & opened: continue #already opened
         new_time = time_left - distance - 1 # move and open
         if new_time < 0: continue
-        gain = flow * new_time
-        new_opened = (1 << valves_indexes[next]) | opened
-        total = gain + find_path(next, new_time, new_opened, memo)
+        total = valves_flow[next] * new_time + find_path(next, new_time, 1 << valves_indexes[next] | opened)
         best = max(best, total)
-        global_best["value"] = max(global_best["value"], best)
-    memo[key] = best
+        #global_best["value"] = max(global_best["value"], best)
+    cache[(pos, time_left, opened)] = best
     return best
 
 #MAIN
-with open("test.txt") as file:
+with open("data.txt") as file:
     lines = file.read().splitlines()
 
 reg_valve = re.compile(r"Valve (\w+) .*rate=(\d+).*valves? (.*)")
 
-map = dict()
-valves = dict() #neighbours only
+valves_flow = dict()
+valves_neighbours = dict()
 for line in lines:
     valve, flow_rate, neighbours = re.search(reg_valve, line).groups()
-    valves[valve] = neighbours.split(", ")
-    map[valve] = int(flow_rate)
+    valves_flow[valve] = int(flow_rate)
+    valves_neighbours[valve] = neighbours.split(", ")
 
-#map: valve: (flow rate, (distance to other valves)), valves with flow=0 are deleted from map
-for valve in valves.keys():
-    flow = map[valve]
-    map[valve] = (flow, (simplify_graph(valve, valves)))
+#valves distances = distance to all valves with non-zero flow
+valves_distances = dict()
+for valve, flow in valves_flow.items():
+    if flow == 0 and valve != "AA": continue
+    valves_distances[valve] = simplify_graph(valve, valves_neighbours)
 
-valves_indexes = {key: i for i, key in enumerate(map.keys())}
+#indexes for bitmask
+valves_indexes = {key: i for i, key in enumerate(valves_distances.keys())}
 
-memo = dict()
-global_best = {"value":0}
-print(find_path("AA", 30, 0, memo))
+cache = {}
+print(find_path("AA", 30, 0))
 print("Runtime:", (datetime.now() - time_start))
