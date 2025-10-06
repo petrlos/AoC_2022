@@ -1,11 +1,9 @@
 #Advent of Code 2022 Day 16
 import re
 from datetime import datetime
-time_start = datetime.now()
-from functools import lru_cache
-
-from icecream import ic
 from collections import deque
+
+time_start = datetime.now()
 
 def simplify_graph(valve, valves):
     visited = {valve: 0}
@@ -32,12 +30,11 @@ def find_path(pos, time_left, opened):
         if new_time < 0: continue
         total = valves_flow[next] * new_time + find_path(next, new_time, 1 << valves_indexes[next] | opened)
         best = max(best, total)
-        #global_best["value"] = max(global_best["value"], best)
     cache[(pos, time_left, opened)] = best
     return best
 
 #MAIN
-with open("data.txt") as file:
+with open("test.txt") as file:
     lines = file.read().splitlines()
 
 reg_valve = re.compile(r"Valve (\w+) .*rate=(\d+).*valves? (.*)")
@@ -58,6 +55,19 @@ for valve, flow in valves_flow.items():
 #indexes for bitmask
 valves_indexes = {key: i for i, key in enumerate(valves_distances.keys())}
 
+#Part 1
 cache = {}
-print(find_path("AA", 30, 0))
+print("Part 1:", find_path("AA", 30, 0))
+
+#Part2
+MAX_bits = (1<< len(valves_indexes)) - 1
+
+maximum = 0
+for i in range((2**len(valves_indexes)-1) // 2):
+    first = find_path("AA", 26, i)
+    second = find_path("AA", 26, i ^ MAX_bits)
+    maximum = max(maximum, (first + second))
+print("Part 2:", maximum)
+
+#runs about 50seconds
 print("Runtime:", (datetime.now() - time_start))
